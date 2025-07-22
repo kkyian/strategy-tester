@@ -1,18 +1,17 @@
-# example_strategy.py
+import pandas as pd
 
-# Strategy: Simple Moving Average Crossover
 
-# Calculate short and long moving averages
-df["short_ma"] = df["Close"].rolling(window=10).mean()
-df["long_ma"] = df["Close"].rolling(window=30).mean()
+def apply_strategy(df: pd.DataFrame) -> pd.DataFrame:
+    """Example simple moving average crossover strategy."""
+    df = df.copy()
+    df["short_ma"] = df["Close"].rolling(window=10).mean()
+    df["long_ma"] = df["Close"].rolling(window=30).mean()
 
-# Generate trading signals
-df["signal"] = 0
-df.loc[df["short_ma"] > df["long_ma"], "signal"] = 1   # Buy
-df.loc[df["short_ma"] < df["long_ma"], "signal"] = -1  # Sell
+    df["signal"] = 0
+    df.loc[df["short_ma"] > df["long_ma"], "signal"] = 1
+    df.loc[df["short_ma"] < df["long_ma"], "signal"] = -1
 
-# Generate positions (shift to simulate trading delay)
-df["position"] = df["signal"].shift()
+    df["position"] = df["signal"].shift()
+    df["returns"] = df["Close"].pct_change()
+    return df
 
-# Daily returns
-df["returns"] = df["Close"].pct_change()

@@ -1,4 +1,5 @@
 # example_strategy.py
+# ruff: noqa: F821
 
 # Strategy: Simple Moving Average Crossover
 

@@ -1,29 +1,51 @@
-import yfinance as yf
+"""Simple command line crypto strategy backtester with optional Gemini analysis."""
+
+import json
+from typing import Callable, Tuple
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import requests
-import json
-import matplotlib.pyplot as plt
+import yfinance as yf
 
 # === Gemini AI Setup ===
 GEMINI_API_KEY = ""  # Optional: Insert your key if you want Gemini feedback
-GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+GEMINI_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/models/"
+    "gemini-2.0-flash:generateContent"
+)
 HEADERS = {"Content-Type": "application/json"}
 
 # === Load Historical Data ===
-def get_crypto_data(symbol="BTC-USD", period="1y", interval="1d"):
+def get_crypto_data(symbol: str = "BTC-USD", period: str = "1y", interval: str = "1d") -> pd.DataFrame:
+    """Download historical OHLC data using yfinance."""
+
     return yf.download(symbol, period=period, interval=interval)
 
-# === Apply Strategy from .py File ===
-def apply_user_strategy(df, strategy_code):
-    local_env = {"df": df.copy(), "pd": pd}
+
+# === Strategy Loading ===
+def load_strategy(path: str) -> Tuple[Callable[[pd.DataFrame], pd.DataFrame], str]:
+    """Load a strategy file and return the apply_strategy function and source."""
+
     try:
-        exec(strategy_code, {}, local_env)
-        return local_env["df"]
-    except Exception as e:
-        raise RuntimeError(f"❌ Strategy execution failed:\n{e}")
+        with open(path, "r") as f:
+            code = f.read()
+    except FileNotFoundError as exc:
+        raise FileNotFoundError("❌ File not found.") from exc
+
+    local_env: dict = {}
+    exec(code, {}, local_env)
+    strategy_func = local_env.get("apply_strategy")
+
+    if not callable(strategy_func):
+        raise ValueError("Strategy file must define an 'apply_strategy(df)' function")
+
+    return strategy_func, code
 
 # === Evaluate Performance ===
-def evaluate_performance(df):
+def evaluate_performance(df: pd.DataFrame) -> dict:
+    """Calculate simple performance statistics."""
+
     df = df.copy()
     if "position" not in df.columns or "returns" not in df.columns:
         raise ValueError("Strategy must define both 'position' and 'returns'.")
@@ -47,7 +69,9 @@ def evaluate_performance(df):
     }
 
 # === Gemini AI Analysis ===
-def analyze_with_gemini(code, metrics):
+def analyze_with_gemini(code: str, metrics: dict) -> str:
+    """Return a short analysis of the strategy using Gemini, if configured."""
+
     if not GEMINI_API_KEY:
         return "Gemini feedback skipped (API key not provided)."
 
@@ -72,40 +96,8 @@ Sharpe Ratio: {metrics['sharpe_ratio']}
     else:
         return f"❌ Gemini error: {response.text}"
 
-# === Main Entry ===
-if __name__ == "__main__":
-    print("📊 Crypto Strategy Tester (BTC-USD)")
-    strategy_path = input("Enter path to your strategy file (e.g. example_strategy.py): ").strip()
-
-    try:
-        with open(strategy_path, "r") as f:
-            strategy_code = f.read()
-    except FileNotFoundError:
-        print("❌ File not found.")
-        exit(1)
-
-    print("📥 Downloading data...")
-    df = get_crypto_data()
-
-    try:
-        df = apply_user_strategy(df, strategy_code)
-    except Exception as e:
-        print(str(e))
-        exit(1)
-
-    try:
-        results = evaluate_performance(df)
-        df = results.pop("df")
-    except Exception as e:
-        print(f"❌ Backtest error: {e}")
-        exit(1)
-
-    print("\n📈 Backtest Results:")
-    for key, value in results.items():
-        print(f"{key}: {value}")
-
-    print("\n🤖 Gemini Feedback:")
-    print(analyze_with_gemini(strategy_code, results))
+def plot_equity(df: pd.DataFrame) -> None:
+    """Display a basic equity curve."""
 
     df["equity"].plot(title="Equity Curve", figsize=(10, 5))
     plt.xlabel("Date")
@@ -113,3 +105,45 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
+
+def main() -> None:
+    print("📊 Crypto Strategy Tester (BTC-USD)")
+    strategy_path = input(
+        "Enter path to your strategy file (e.g. example_strategy.py): "
+    ).strip()
+
+    try:
+        strategy_func, code = load_strategy(strategy_path)
+    except Exception as exc:
+        print(str(exc))
+        return
+
+    print("📥 Downloading data...")
+    df = get_crypto_data()
+
+    try:
+        df = strategy_func(df.copy())
+    except Exception as exc:
+        print(f"❌ Strategy execution failed:\n{exc}")
+        return
+
+    try:
+        results = evaluate_performance(df)
+        df = results.pop("df")
+    except Exception as exc:
+        print(f"❌ Backtest error: {exc}")
+        return
+
+    print("\n📈 Backtest Results:")
+    for key, value in results.items():
+        print(f"{key}: {value}")
+
+    print("\n🤖 Gemini Feedback:")
+    print(analyze_with_gemini(code, results))
+
+    plot_equity(df)
+
+
+if __name__ == "__main__":
+    main()

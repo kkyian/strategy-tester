@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Your Strategies</h2>
+{% if strategies %}
+  <ul>
+    {% for strat in strategies %}
+      <li>
+        <pre>{{ strat.code }}</pre>
+        {% if strat.feedback %}
+          <strong>Feedback:</strong> {{ strat.feedback }}<br>
+        {% endif %}
+        <form action="{{ url_for('analyze', strategy_id=strat.id) }}" method="post" style="display:inline;">
+          <button type="submit">Generate Feedback</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No strategies yet.</p>
+{% endif %}
+
+<h3>Add Strategy</h3>
+<form method="post" action="{{ url_for('add_strategy') }}">
+  <textarea name="code" required></textarea><br>
+  <button type="submit">Save Strategy</button>
+</form>
+{% endblock %}

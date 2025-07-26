@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Strategy Tester</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      .container { max-width: 800px; margin: auto; }
+      textarea { width: 100%; height: 200px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      {% if session.username %}
+        Logged in as {{ session.username }} | <a href="{{ url_for('logout') }}">Logout</a>
+        <hr>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

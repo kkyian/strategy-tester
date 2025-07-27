@@ -16,12 +16,15 @@ A backtesting and AI analysis tool for cryptocurrency trading strategies using P
 git clone https://github.com/kkyian/strategy-tester.git
 cd strategy-tester
 python strategy_tester.py
+# or launch the web interface
+python web_app.py
 ```
 When prompted, enter: `example_strategy.py`
 
 ## 📂 Files
 
-- `strategy_tester.py` - main backtesting engine
+- `strategy_tester.py` - command line backtesting engine
+- `web_app.py` - Flask web interface with user accounts and strategy storage
 - `example_strategy.py` - sample SMA crossover strategy
 
 ## ✍️ Customize

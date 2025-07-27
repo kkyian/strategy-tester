@@ -1,0 +1,33 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Your Strategies</h2>
+{% if strategies %}
+  <ul>
+    {% for strat in strategies %}
+      <li>
+        <pre>{{ strat.code }}</pre>
+        {% if strat.final_equity %}
+          <strong>Final Equity:</strong> ${{ strat.final_equity }}<br>
+          <strong>Total Return:</strong> ${{ strat.total_return }}<br>
+          <strong>Win Rate:</strong> {{ (strat.win_rate * 100)|round(2) }}%<br>
+          <strong>Sharpe Ratio:</strong> {{ strat.sharpe_ratio }}<br>
+        {% endif %}
+        {% if strat.feedback %}
+          <strong>Feedback:</strong> {{ strat.feedback }}<br>
+        {% endif %}
+        <form action="{{ url_for('analyze', strategy_id=strat.id) }}" method="post" style="display:inline;">
+          <button type="submit">Run &amp; Get Feedback</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No strategies yet.</p>
+{% endif %}
+
+<h3>Add Strategy</h3>
+<form method="post" action="{{ url_for('add_strategy') }}">
+  <textarea name="code" required placeholder="import pandas as pd\n\n\ndef apply_strategy(df: pd.DataFrame) -> pd.DataFrame:\n    df['position'] = 0\n    df['returns'] = 0\n    return df"></textarea><br>
+  <button type="submit">Save Strategy</button>
+</form>
+{% endblock %}

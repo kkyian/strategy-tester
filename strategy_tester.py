@@ -42,6 +42,19 @@ def load_strategy(path: str) -> Tuple[Callable[[pd.DataFrame], pd.DataFrame], st
 
     return strategy_func, code
 
+
+def load_strategy_from_code(code: str) -> Tuple[Callable[[pd.DataFrame], pd.DataFrame], str]:
+    """Load a strategy from raw code and return the function and source."""
+
+    local_env: dict = {}
+    exec(code, {}, local_env)
+    strategy_func = local_env.get("apply_strategy")
+
+    if not callable(strategy_func):
+        raise ValueError("Strategy code must define an 'apply_strategy(df)' function")
+
+    return strategy_func, code
+
 # === Evaluate Performance ===
 def evaluate_performance(df: pd.DataFrame) -> dict:
     """Calculate simple performance statistics."""
@@ -109,12 +122,24 @@ def plot_equity(df: pd.DataFrame) -> None:
 
 def main() -> None:
     print("📊 Crypto Strategy Tester (BTC-USD)")
-    strategy_path = input(
-        "Enter path to your strategy file (e.g. example_strategy.py): "
-    ).strip()
+    print("Paste your strategy code below. Finish with an empty line:\n")
+    lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        if line.strip() == "" and lines:
+            break
+        lines.append(line)
+    code = "\n".join(lines)
+
+    if not code.strip():
+        print("No strategy code entered.")
+        return
 
     try:
-        strategy_func, code = load_strategy(strategy_path)
+        strategy_func, code = load_strategy_from_code(code)
     except Exception as exc:
         print(str(exc))
         return

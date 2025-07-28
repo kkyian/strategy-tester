@@ -4,7 +4,7 @@ A backtesting and AI analysis tool for cryptocurrency trading strategies using P
 
 ## 🔧 Features
 
-- ✅ Run trading logic from a `.py` strategy file
+- ✅ Run trading logic from strategy code
 - 📈 Backtests with PnL, Sharpe Ratio, Win Rate
 - 🤖 Gemini AI explains your strategy's logic and performance
 - 📉 Auto-generated equity curve
@@ -17,7 +17,8 @@ git clone https://github.com/kkyian/strategy-tester.git
 cd strategy-tester
 python strategy_tester.py
 ```
-When prompted, enter: `example_strategy.py`
+When prompted, paste the code from `example_strategy.py` (or your own
+strategy) and press Enter on an empty line to run the backtest.
 
 ## 📂 Files
 

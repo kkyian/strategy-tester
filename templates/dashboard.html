@@ -21,7 +21,8 @@
 
 <h3>Add Strategy</h3>
 <form method="post" action="{{ url_for('add_strategy') }}">
-  <textarea name="code" required></textarea><br>
+  <label for="code">Strategy Code (Python):</label><br>
+  <textarea name="code" id="code" required></textarea><br>
   <button type="submit">Save Strategy</button>
 </form>
 {% endblock %}
